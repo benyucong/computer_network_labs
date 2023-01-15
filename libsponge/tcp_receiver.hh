@@ -16,9 +16,16 @@
 class TCPReceiver {
     //! Our data structure for re-assembling bytes.
     StreamReassembler _reassembler;
-
     //! The maximum number of bytes we'll store.
     size_t _capacity;
+    // own implementation
+    bool _syn = false;
+    bool _fin = false;
+
+    uint64_t _ack = 0;
+    // when FIN shows record the final index of the last byte
+    size_t end_id = 0;
+    WrappingInt32 isn = WrappingInt32(0);
 
   public:
     //! \brief Construct a TCP receiver
@@ -55,6 +62,8 @@ class TCPReceiver {
 
     //! \brief handle an inbound segment
     void segment_received(const TCPSegment &seg);
+
+    void write2ressembler(const TCPSegment &seg);
 
     //! \name "Output" interface for the reader
     //!@{
