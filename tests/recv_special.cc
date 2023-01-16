@@ -32,20 +32,20 @@ int main() {
         }
 
         /* segment with SYN + data */
-        // {
-        //     uint32_t isn = uniform_int_distribution<uint32_t>{0, UINT32_MAX}(rd);
-        //     TCPReceiverTestHarness test{4000};
-        //     test.execute(ExpectState{TCPReceiverStateSummary::LISTEN});
-        //     test.execute(SegmentArrives{}
-        //                      .with_syn()
-        //                      .with_seqno(isn)
-        //                      .with_data("Hello, CS144!")
-        //                      .with_result(SegmentArrives::Result::OK));
-        //     test.execute(ExpectState{TCPReceiverStateSummary::SYN_RECV});
-        //     test.execute(ExpectAckno{WrappingInt32{isn + 14}});
-        //     test.execute(ExpectUnassembledBytes{0});
-        //     test.execute(ExpectBytes{"Hello, CS144!"});
-        // }
+        {
+            uint32_t isn = uniform_int_distribution<uint32_t>{0, UINT32_MAX}(rd);
+            TCPReceiverTestHarness test{4000};
+            test.execute(ExpectState{TCPReceiverStateSummary::LISTEN});
+            test.execute(SegmentArrives{}
+                             .with_syn()
+                             .with_seqno(isn)
+                             .with_data("Hello, CS144!")
+                             .with_result(SegmentArrives::Result::OK));
+            test.execute(ExpectState{TCPReceiverStateSummary::SYN_RECV});
+            test.execute(ExpectAckno{WrappingInt32{isn + 14}});
+            test.execute(ExpectUnassembledBytes{0});
+            test.execute(ExpectBytes{"Hello, CS144!"});
+        }
 
         /* empty segment */
         {
