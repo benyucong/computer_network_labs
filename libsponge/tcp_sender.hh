@@ -9,6 +9,26 @@
 #include <functional>
 #include <queue>
 
+class Retransmission_timer {
+  private:
+    unsigned int _initial_rto;
+    unsigned int _rto;
+
+    unsigned int _time_passed = 0;
+    bool _on = false;
+
+  public:
+    Retransmission_timer(unsigned int time);
+    void stop_timer();
+    void start_timer();
+    void double_rto();
+    void timepassing(unsigned int time);
+    bool is_expired();
+    bool is_on();
+    void reset_rto();
+    void reset();
+};
+
 //! \brief The "sender" part of a TCP implementation.
 
 //! Accepts a ByteStream, divides it up into segments and sends the
@@ -20,17 +40,31 @@ class TCPSender {
     //! our initial sequence number, the number for our SYN.
     WrappingInt32 _isn;
 
+    // Timer
+    Retransmission_timer _timer;
+
     //! outbound queue of segments that the TCPSender wants sent
     std::queue<TCPSegment> _segments_out{};
+    // Internal data structure to keep track of outstanding TCP Segments
+    std::deque<TCPSegment> _segments_outstanding{};
 
     //! retransmission timer for the connection
     unsigned int _initial_retransmission_timeout;
+
+    // number of consecutive retransmissions
+    size_t num_retrans = 0;
 
     //! outgoing stream of bytes that have not yet been sent
     ByteStream _stream;
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
+
+    // windows size, initialization?
+    uint16_t _window_size = 0;
+    // tcp seg syn and fin flags
+    bool _syn = false;
+    bool _fin = false;
 
   public:
     //! Initialize a TCPSender
@@ -49,6 +83,9 @@ class TCPSender {
 
     //! \brief A new acknowledgment was received
     void ack_received(const WrappingInt32 ackno, const uint16_t window_size);
+
+    // check if the ackno is greater than all of the sequence numbers in the segment
+    bool ack_seg(uint64_t ack, TCPSegment &segment);
 
     //! \brief Generate an empty-payload segment (useful for creating empty ACK segments)
     void send_empty_segment();
