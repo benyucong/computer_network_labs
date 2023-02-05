@@ -38,7 +38,7 @@ void Retransmission_timer::reset_rto() {
 void Retransmission_timer::reset() {
     _rto = _initial_rto;
     _time_passed = 0;
-    _on = true;
+    _on = false;
 }
 
 //! \param[in] capacity the capacity of the outgoing byte stream
@@ -104,8 +104,13 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     }
     if (ack > _next_seqno) {
         _next_seqno = ack;
-        fill_window();
+        _timer.reset();
+        if(!_segments_outstanding.empty()){
+            _timer.start_timer();
+        }
+        num_retrans = 0;
     }
+    fill_window();
 }
 
 bool TCPSender::ack_seg(uint64_t ack, TCPSegment &segment) {
@@ -119,7 +124,7 @@ bool TCPSender::ack_seg(uint64_t ack, TCPSegment &segment) {
 
 //! \param[in] ms_since_last_tick the number of milliseconds since the last call to this method
 void TCPSender::tick(const size_t ms_since_last_tick) {
-    
+
     _timer.timepassing(ms_since_last_tick);
 
     if (_timer.is_on() && _timer.is_expired()) {
