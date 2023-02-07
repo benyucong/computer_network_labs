@@ -71,12 +71,8 @@ void TCPSender::fill_window() {
     size_t maxLength = _freespace;
     if (_freespace == 0) {
         // Not SYN and _windows_size == 0
-        if (_window_size == 0 && _start) {
-            if (_segments_outstanding.empty()) {
-                maxLength = 1;
-            } else {
-                return;
-            }
+        if (_window_size == 0 && _start && _segments_outstanding.empty()) {
+            maxLength = 1;
         } else {
             return;
         }
@@ -86,9 +82,6 @@ void TCPSender::fill_window() {
     size_t len = std::min(_stream.buffer_size(), payload_bound);
 
     if (!segment.header().syn && len == 0) {
-        // std::cout << "next seqno is " << _next_seqno <<std::endl;
-        // std::cout << "bytes written + 2 is " << _stream.bytes_written() + 2 <<std::endl;
-        // to do
         if (_stream.eof() && _next_seqno == _stream.bytes_written() + 1) {
             segment.header().fin = true;
             send_tcp_seg(segment);
@@ -97,10 +90,7 @@ void TCPSender::fill_window() {
             return;
         }
     }
-    // std::cout << "The payload is " << _stream.peek_output(len) << std::endl;
-    // std::cout << "The stream is " << _stream.peek_output(_stream.buffer_size()) << std::endl;
     string data = _stream.read(len);
-    // std::cout << "payload: " << data << std::endl;
     // Important grammer!
     segment.payload() = Buffer(std::move(data));
 
@@ -112,7 +102,6 @@ void TCPSender::fill_window() {
             segment.header().fin = false;
         }
     }
-    // std::cout << "len: " << segment.length_in_sequence_space() << std::endl;
 
     std::cout << "maxlength: " << maxLength << "; "
               << "buffer_size: " << _stream.buffer_size() << std::endl;
@@ -133,7 +122,6 @@ void TCPSender::ack_received(const WrappingInt32 ackno, const uint16_t window_si
     if (ack > _next_seqno) {
         return;
     }
-    // to do?
     _freespace = window_size + ack >= _next_seqno ? window_size + ack - _next_seqno : 0;
     _window_size = window_size;
 
@@ -190,9 +178,6 @@ unsigned int TCPSender::consecutive_retransmissions() const { return _num_retran
 void TCPSender::send_empty_segment() {}
 
 void TCPSender::send_tcp_seg(TCPSegment &segment) {
-    std::cout << "syn: " << segment.header().syn << std::endl;
-    std::cout << "fin: " << segment.header().fin << std::endl;
-    std::cout << "payload: " << segment.payload().str() << std::endl;
     _segments_out.push(segment);
     _segments_outstanding.push_back(segment);
     if (segment.length_in_sequence_space() && !_timer.is_on()) {
@@ -200,9 +185,6 @@ void TCPSender::send_tcp_seg(TCPSegment &segment) {
     }
     _next_seqno += segment.length_in_sequence_space();
     _flybytes = _next_seqno - _ackno;
-    // std::cout << "_next_seqno = " << _next_seqno << "; "
-    //           << "_ackno = " << _ackno << "; " << std::endl;
-    // std::cout << "flybytes = " << _flybytes << std::endl;
-    // std::cout << "The payload is " << segment.payload().str() << std::endl;
+
     return;
 }
