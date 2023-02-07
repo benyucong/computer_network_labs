@@ -31,7 +31,7 @@ size_t ByteStream::write(const string &data) {
 //! \param[in] len bytes will be copied from the output side of the buffer
 string ByteStream::peek_output(const size_t len) const {
     size_t len2peek = len < _stream.size() ? len : _stream.size();
-    string ans = string(_stream.end() - len2peek, _stream.end());
+    string ans = string().assign(_stream.begin(), _stream.begin() + len2peek);
     return ans;
 }
 

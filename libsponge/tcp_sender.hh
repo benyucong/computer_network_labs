@@ -52,19 +52,24 @@ class TCPSender {
     unsigned int _initial_retransmission_timeout;
 
     // number of consecutive retransmissions
-    size_t num_retrans = 0;
+    size_t _num_retrans{0};
 
     //! outgoing stream of bytes that have not yet been sent
     ByteStream _stream;
 
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
+    //! the (absolute) ack number 
+    uint64_t _ackno{0};
+    //! sent but not acked bytes
+    uint64_t _flybytes{0};
 
     // windows size, initialization?
-    uint16_t _window_size = 0;
+    size_t _window_size{0};
+    size_t _freespace{0};
     // tcp seg syn and fin flags
-    bool _syn = false;
-    bool _fin = false;
+    bool _syn = true;
+    bool _start = false;
 
   public:
     //! Initialize a TCPSender
@@ -96,6 +101,9 @@ class TCPSender {
     //! \brief Notifies the TCPSender of the passage of time
     void tick(const size_t ms_since_last_tick);
     //!@}
+
+    //! \brief send TCP segment
+    void send_tcp_seg(TCPSegment &seg);
 
     //! \name Accessors
     //!@{
