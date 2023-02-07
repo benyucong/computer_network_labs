@@ -103,8 +103,6 @@ void TCPSender::fill_window() {
         }
     }
 
-    std::cout << "maxlength: " << maxLength << "; "
-              << "buffer_size: " << _stream.buffer_size() << std::endl;
     if (_freespace >= segment.length_in_sequence_space()) {
         _freespace -= segment.length_in_sequence_space();
     }
