@@ -173,7 +173,12 @@ void TCPSender::tick(const size_t ms_since_last_tick) {
 
 unsigned int TCPSender::consecutive_retransmissions() const { return _num_retrans; }
 
-void TCPSender::send_empty_segment() {}
+void TCPSender::send_empty_segment() {
+    // empty segment doesn't need store to outstanding queue
+    TCPSegment seg;
+    seg.header().seqno = wrap(_next_seqno, _isn);
+    _segments_out.push(seg);
+}
 
 void TCPSender::send_tcp_seg(TCPSegment &segment) {
     _segments_out.push(segment);
